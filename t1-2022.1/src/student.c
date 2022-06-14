@@ -14,7 +14,6 @@ void* student_run(void *arg)
 {
     student_t *self = (student_t*) arg;
     table_t *tables  = globals_get_table();
-
     worker_gate_insert_queue_buffet(self);
     student_serve(self);
     student_seat(self, tables);
@@ -27,11 +26,24 @@ void student_seat(student_t *self, table_t *table)
 {
     /* Produtor consumidor, decrementa espaços vazios
     e incrementa ocupados */
+    //Procura um assento livre
+    // se o semáforo para buffet estava trancado, o libera quando um um estudante senta
+    //int value_sem;
+    /*sem_getvalue(&sem_buffet, &value_sem);
+    if (value_sem == 0){ 
+        sem_post(&sem_buffet);
+    }*/
+    
 }
 
 void student_serve(student_t *self)
 {
     /* Remove comida das opções escolhidas */
+    // Verificar se a comida atual está nos desejos do estudante
+    // Se estiver, estudante serve opção e decrementa a quantidade desta 
+    // Invocar função buffet_next para ir para prox posição do buffet
+    // Controlar acessso às bacias com semáforo para esperar chef servir
+
 }
 
 void student_leave(student_t *self, table_t *table)

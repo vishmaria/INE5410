@@ -1,6 +1,8 @@
 #include <stdlib.h>
+#include "globals.h"
 #include "buffet.h"
 #include "config.h"
+#include <semaphore.h>
 
 
 void *buffet_run(void *arg)
@@ -24,7 +26,8 @@ void *buffet_run(void *arg)
 void buffet_init(buffet_t *self, int number_of_buffets)
 {
     int i = 0, j = 0;
-    for (i = 0; i < number_of_buffets; i++)
+    //sem_init(&sem_buffet, 0, 1); // semáforo para esperar entrar no buffet, inicia liberado
+    for (i = 0; i < number_of_buffets; i++)             
     {
         /*A fila possui um ID*/
         self[i]._id = i;
@@ -52,6 +55,9 @@ void buffet_init(buffet_t *self, int number_of_buffets)
 
 int buffet_queue_insert(buffet_t *self, student_t *student)
 {
+    //primeiro passo do produtor consumidor. o segundo passo PROVAVELMENTE é no student.c
+
+    printf("teste\n");
     /* Se o estudante vai para a fila esquerda */
     if (student->left_or_right == 'L') 
     {
@@ -99,6 +105,7 @@ void buffet_next_step(buffet_t *self, student_t *student)
     }
 }
 
+
 /* --------------------------------------------------------- */
 /* ATENÇÃO: Não será necessário modificar as funções abaixo! */
 /* --------------------------------------------------------- */
@@ -130,3 +137,4 @@ void _log_buffet(buffet_t *self)
     printf("\u2517\u2501 Queue right: [ %d %d %d %d %d ]\n", ids_right[0],ids_right[1],ids_right[2],ids_right[3],ids_right[4]);
     fflush(stdout);
 }
+

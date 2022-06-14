@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "table.h"
 
-
+//ALTERR CONFORME EMAIL
 /* --------------------------------------------------------- */
 /* ATENÇÃO: Não será necessário modificar as funções abaixo! */
 /* --------------------------------------------------------- */

@@ -8,6 +8,8 @@ void *chef_run()
     /* Insira sua lógica aqui */
     while (TRUE)
     {
+        //Permanece olhando os buffets, check_food em cada um
+    
         msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }
     

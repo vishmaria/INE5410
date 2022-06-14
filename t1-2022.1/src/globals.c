@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "globals.h"
+#include <semaphore.h>
 
 queue_t *students_queue = NULL;
 table_t *table = NULL;
