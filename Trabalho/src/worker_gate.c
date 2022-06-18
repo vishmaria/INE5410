@@ -1,0 +1,108 @@
+#include <stdlib.h>
+#include <pthread.h>
+#include "worker_gate.h"
+#include "globals.h"
+#include "config.h"
+pthread_mutex_t mutex_insere_fila; //mutex para inserir um aluno no fim da fila. 
+pthread_mutex_t mutex_decrementa_alunos; //mutex para evitar datarace na subtração de number_students.
+pthread_mutex_t mutex_ler_fila; //mutex para garantir que exclusão mutua na leitura e escrita da frente da fila.
+
+
+
+void worker_gate_look_queue()
+{
+
+    //Enquanto a fila esta vazia, não deixa continuar. Isto serve para que o worker_gate não tente realizar operações sobre uma fila vazia
+    pthread_mutex_lock(&mutex_ler_fila); 
+    while(globals_get_queue()->_length == 0); 
+    pthread_mutex_unlock(&mutex_ler_fila);
+    return;
+}
+
+void worker_gate_remove_student()
+{
+    //Remove o primeiro estudante da fila e o insere no buffet.
+    pthread_mutex_lock(&mutex_ler_fila); 
+    student_t *student = queue_remove(globals_get_queue());
+    pthread_mutex_unlock(&mutex_ler_fila);
+    buffet_t *buffets = globals_get_buffets();
+    buffet_queue_insert(buffets, student);
+    
+}
+
+void worker_gate_look_buffet()
+{
+    // Olha para onde tem lugar livre no buffet e define para onde o próximo aluno a entrar no buffet deve ir.
+    pthread_mutex_lock(&mutex_ler_fila);
+    student_t *student = globals_get_queue()->_first->_student;
+    pthread_mutex_unlock(&mutex_ler_fila);
+    buffet_t *buffets = globals_get_buffets();
+    //int num_buffets = (sizeof(buffets)/sizeof(buffet_t*));
+
+    while(1){
+        for(int i = 0; i < 2; i++){ //TROCAR 2 POR NUMERO DE BUFFETS
+            // Atribui o primeiro aluno da fila a um buffet e fila.
+            if(buffets[i].queue_left[0] == 0){ // se tem vaga na primeira vaga da fila da esquerda:
+                student->left_or_right = 'L'; // vá para a fila da esquerda...
+                student->_id_buffet = i;     // ...do buffet i         
+                return;
+            }
+            else if(buffets[i].queue_right[0] == 0){ // se não tiver vaga na fila da esquerda mas houver na da direita:
+                student->left_or_right = 'R';       // vá para a fila da direita...
+                student->_id_buffet = i;           // ... do buffet i.
+                return;
+            }
+        }
+        // Repete o laço enquanto não encontrar um lugar vago nos buffets.
+    }    
+
+}
+
+void *worker_gate_run(void *arg)
+{
+
+    int number_students;
+
+    number_students = *((int *)arg);
+
+    while (number_students > 1)
+    {
+        worker_gate_look_queue(); //Ve se a fila não esta vazia
+        worker_gate_look_buffet(); //Olha para ver se e onde tem lugar vazio nas primeiras posições dos buffets e define onde o primeiro estudante da fila vai.
+        worker_gate_remove_student(); //tira o estudante da fila e o insere no buffet.
+        pthread_mutex_lock(&mutex_decrementa_alunos); 
+        number_students--; //reduz o numero de estudantes da fila.
+        printf(" numero de estudantes restantes: %d\n", number_students);
+        pthread_mutex_unlock(&mutex_decrementa_alunos);
+        //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
+    }
+    printf("Acabou gente na fila externa");
+    pthread_exit(NULL);
+}
+
+void worker_gate_init(worker_gate_t *self)
+{
+    int number_students = globals_get_students();
+    pthread_mutex_init(&mutex_insere_fila, 0);
+    pthread_mutex_init(&mutex_decrementa_alunos, 0);
+    pthread_mutex_init(&mutex_ler_fila, 0);
+    pthread_create(&self->thread, NULL, worker_gate_run, &number_students);
+}
+
+void worker_gate_finalize(worker_gate_t *self)
+{   
+    pthread_mutex_destroy(&mutex_insere_fila);
+    pthread_mutex_destroy(&mutex_decrementa_alunos);
+    pthread_mutex_destroy(&mutex_ler_fila);
+    pthread_join(self->thread, NULL);
+    free(self);
+}
+
+void worker_gate_insert_queue_buffet(student_t *student)
+{
+
+    pthread_mutex_lock(&mutex_insere_fila);
+    queue_insert(globals_get_queue(), student); //insere um estudante na fila pro buffet.
+    pthread_mutex_unlock(&mutex_insere_fila);
+
+}

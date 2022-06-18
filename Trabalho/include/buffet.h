@@ -2,14 +2,15 @@
 #define __buffet_H__
 
 #include <pthread.h>
+
 #include "queue.h"
-#include <semaphore.h>
-//sem_t sem_buffet;
+
 
 typedef struct buffet
 {
     int _id;
     int _meal[5];
+    pthread_mutex_t mutex_trocar_comida;
     int queue_left[5];
     int queue_right[5];
     
@@ -57,11 +58,4 @@ extern int buffet_queue_insert(buffet_t *self, student_t *student);
  */
 void _log_buffet(buffet_t *self);
 
-/**
- *
- * @brief Retorna TRUE quando o valor do semaforo sem_buffet_vazio == 0, ou seja, quando não houverem lugares vazios em nenhum buffet.
- *
- *
- */
-extern int _buffets_cheios();
 #endif

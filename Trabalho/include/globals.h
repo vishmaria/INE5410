@@ -4,8 +4,6 @@
 #include "queue.h"
 #include "table.h"
 #include "buffet.h"
-#include <pthread.h>
-#include <semaphore.h> //adicionamos as bibliotecas no header global pra não ter includes redundantes em cada .c
 
 /**
  * @brief Inicia uma fila (de modo global)
