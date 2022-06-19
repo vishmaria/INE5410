@@ -22,12 +22,12 @@ void worker_gate_look_queue()
 void worker_gate_remove_student()
 {
     //Remove o primeiro estudante da fila e o insere no buffet.
-    pthread_mutex_lock(&mutex_ler_fila); 
+    //pthread_mutex_lock(&mutex_ler_fila); 
     student_t *student = queue_remove(globals_get_queue());
-    pthread_mutex_unlock(&mutex_ler_fila);
+    //pthread_mutex_unlock(&mutex_ler_fila);
     buffet_t *buffets = globals_get_buffets();
     buffet_queue_insert(buffets, student);
-    
+    //printf("Removi o estudante %d da fila do Ru\n\n", student-> _id);
 }
 
 void worker_gate_look_buffet()
@@ -40,16 +40,18 @@ void worker_gate_look_buffet()
     //int num_buffets = (sizeof(buffets)/sizeof(buffet_t*));
 
     while(1){
+        // Atribui o primeiro aluno da fila a um buffet e fila.
         for(int i = 0; i < 2; i++){ //TROCAR 2 POR NUMERO DE BUFFETS
-            // Atribui o primeiro aluno da fila a um buffet e fila.
-            if(buffets[i].queue_left[0] == 0){ // se tem vaga na primeira vaga da fila da esquerda:
-                student->left_or_right = 'L'; // vá para a fila da esquerda...
-                student->_id_buffet = i;     // ...do buffet i         
+            /*Verifica se a primeira posição da fila esquerda está livre*/
+            if(pthread_mutex_trylock(&buffets[i].mutex_posicao_left[0]) == 0){  //tenta dar lock na primeira posição da fila a esquerda (está disponível)
+                student->left_or_right = 'L'; 
+                student->_id_buffet = i;            
                 return;
             }
-            else if(buffets[i].queue_right[0] == 0){ // se não tiver vaga na fila da esquerda mas houver na da direita:
-                student->left_or_right = 'R';       // vá para a fila da direita...
-                student->_id_buffet = i;           // ... do buffet i.
+            //se primeira posição da esquerda não está livre vai para a fila direita
+            else if(pthread_mutex_trylock(&buffets[i].mutex_posicao_right[0]) == 0){  //tenta dar lock na primeira posição da fila a direita (está disponível?)
+                student->left_or_right = 'R';       
+                student->_id_buffet = i;         
                 return;
             }
         }
@@ -72,7 +74,6 @@ void *worker_gate_run(void *arg)
         worker_gate_remove_student(); //tira o estudante da fila e o insere no buffet.
         pthread_mutex_lock(&mutex_decrementa_alunos); 
         number_students--; //reduz o numero de estudantes da fila.
-        printf(" numero de estudantes restantes: %d\n", number_students);
         pthread_mutex_unlock(&mutex_decrementa_alunos);
         //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }

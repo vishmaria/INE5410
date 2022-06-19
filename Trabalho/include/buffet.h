@@ -11,6 +11,8 @@ typedef struct buffet
     int _id;
     int _meal[5];
     pthread_mutex_t mutex_trocar_comida;
+    pthread_mutex_t mutex_posicao_left[5];
+    pthread_mutex_t mutex_posicao_right[5];
     int queue_left[5];
     int queue_right[5];
     

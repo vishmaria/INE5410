@@ -5,6 +5,18 @@
 #include "table.h"
 #include "buffet.h"
 
+void globals_set_seats_number(int x);
+
+int globals_get_seats_number();
+
+void globals_set_buffets_number(int x);
+
+int globals_get_buffets_number();
+
+void globals_set_tables_number(int x);
+
+int globals_get_tables_number();
+
 /**
  * @brief Inicia uma fila (de modo global)
  * 

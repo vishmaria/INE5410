@@ -25,15 +25,19 @@ void chef_check_food()
 {
     if(globals_get_buffets() == NULL) return;
         for(int i = 0; i< 2; i++){ //trocar 2 por num_buffets;
-            if((pthread_mutex_trylock(&globals_get_buffets()[i].mutex_trocar_comida))){ //se o mutex estiver trancado:
+            if((pthread_mutex_trylock(&globals_get_buffets()[i].mutex_trocar_comida)) == 0){ //se o mutex estiver trancado:
                 for(int x = 0; x<5;x++){                                               // verifica em qual posição da fila está faltando comida.
-                    if(globals_get_buffets()[i]._meal[x] < 0){ 
+                    if(globals_get_buffets()[i]._meal[x] < 2){ 
                         globals_get_buffets()[i]._meal[x] = 40; //trocar 40 por 20 caso a solução seja dividar cada bacia em duas.
-                        printf("TROCANDO A BACIA DE COMIDA\n"); //FIX: DELETAR ANTES DE ENVIAR
-                        pthread_mutex_unlock(&globals_get_buffets()[i].mutex_trocar_comida); //libera a fila trancada.
+                        printf("TROCANDO A BACIA DE COMIDA %d\n", x); //FIX: DELETAR ANTES DE ENVIAR
+                         //libera a fila trancada.
+                         pthread_mutex_unlock(&globals_get_buffets()[i].mutex_trocar_comida);
+                         break;
                     }
+                    
                 }
             }
+            else pthread_mutex_unlock(&globals_get_buffets()[i].mutex_trocar_comida);
         }
     
 }
