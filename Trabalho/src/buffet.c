@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "buffet.h"
 #include "config.h"
+#include "globals.h"
 
 
 void *buffet_run(void *arg)
@@ -24,6 +25,7 @@ void *buffet_run(void *arg)
 void buffet_init(buffet_t *self, int number_of_buffets)
 {
     int i = 0, j = 0;
+    globals_set_buffets_number(number_of_buffets);
     for (i = 0; i < number_of_buffets; i++)
     {
         /*A fila possui um ID*/
@@ -81,8 +83,8 @@ void buffet_next_step(buffet_t *self, student_t *student)
     /* Se estudante ainda precisa se servir de mais alguma coisa... */
     //printf("ALuno %d está na posicao %d do buffet %d do lado %c\n", student-> _id, student-> _buffet_position, self[student->_id_buffet]._id, student-> left_or_right);
     fflush(stdout);
-    if (student->_buffet_position< 5)
-    {    /* Está na fila esquerda? */
+    //if (student->_buffet_position < 5)
+    //{    /* Está na fila esquerda? */
         if (student->left_or_right == 'L')
         {   /* Caminha para a posição seguinte da fila do buffet.*/
             int position = student->_buffet_position;
@@ -104,7 +106,7 @@ void buffet_next_step(buffet_t *self, student_t *student)
             student->_buffet_position = student->_buffet_position + 1;
             pthread_mutex_unlock(&self[student->_id_buffet].mutex_posicao_right[position]);
         }
-    }
+    //}
 }
 
 /* --------------------------------------------------------- */

@@ -115,10 +115,10 @@ int main (int argc, char **argv)
 
     /*Inicia os estudantes*/
     students_come_to_lunch(config.students);
-
+    
     /* Finaliza o chef */
     chef_finalize(chef);
-    
+
     /*Finaliza o(s) buffet(s)*/
     buffet_finalize(buffets, config.buffets);
 

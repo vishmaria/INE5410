@@ -3,6 +3,7 @@
 #include "worker_gate.h"
 #include "globals.h"
 #include "config.h"
+#include <semaphore.h>
 pthread_mutex_t mutex_insere_fila; //mutex para inserir um aluno no fim da fila. 
 pthread_mutex_t mutex_decrementa_alunos; //mutex para evitar datarace na subtração de number_students.
 pthread_mutex_t mutex_ler_fila; //mutex para garantir que exclusão mutua na leitura e escrita da frente da fila.
@@ -37,11 +38,11 @@ void worker_gate_look_buffet()
     student_t *student = globals_get_queue()->_first->_student;
     pthread_mutex_unlock(&mutex_ler_fila);
     buffet_t *buffets = globals_get_buffets();
-    //int num_buffets = (sizeof(buffets)/sizeof(buffet_t*));
+    int num_buffets = globals_get_buffets_number();
 
     while(1){
         // Atribui o primeiro aluno da fila a um buffet e fila.
-        for(int i = 0; i < 2; i++){ //TROCAR 2 POR NUMERO DE BUFFETS
+        for(int i = 0; i < num_buffets; i++){ 
             /*Verifica se a primeira posição da fila esquerda está livre*/
             if(pthread_mutex_trylock(&buffets[i].mutex_posicao_left[0]) == 0){  //tenta dar lock na primeira posição da fila a esquerda (está disponível)
                 student->left_or_right = 'L'; 
@@ -77,16 +78,24 @@ void *worker_gate_run(void *arg)
         pthread_mutex_unlock(&mutex_decrementa_alunos);
         //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }
-    printf("Acabou gente na fila externa");
+    globals_set_students(0);
+    printf("\n\nAcabou gente na fila externa\n\n");
     pthread_exit(NULL);
 }
 
 void worker_gate_init(worker_gate_t *self)
 {
     int number_students = globals_get_students();
+    int number_of_tables = globals_get_tables_number();
     pthread_mutex_init(&mutex_insere_fila, 0);
     pthread_mutex_init(&mutex_decrementa_alunos, 0);
     pthread_mutex_init(&mutex_ler_fila, 0);
+    for (int i = 0; i < number_of_tables; i++)
+    {
+        sem_init(&globals_get_table()[i].sem_lugares, 0, globals_get_seats_number()); //ATENÇÃO: TEM QUE DESTRUIR ESSA PORRA.
+        pthread_mutex_init(&globals_get_table()[i].mutex_decremento_lugares, 0);
+        
+    }
     pthread_create(&self->thread, NULL, worker_gate_run, &number_students);
 }
 
@@ -95,6 +104,15 @@ void worker_gate_finalize(worker_gate_t *self)
     pthread_mutex_destroy(&mutex_insere_fila);
     pthread_mutex_destroy(&mutex_decrementa_alunos);
     pthread_mutex_destroy(&mutex_ler_fila);
+    for (int i = 0; i < globals_get_buffets_number(); i++)
+    {
+        pthread_mutex_destroy(&globals_get_buffets()[i].mutex_trocar_comida);
+
+        for(int j= 0; j< 5; j++){
+            pthread_mutex_destroy(&globals_get_buffets()[i].mutex_posicao_left[j]);
+            pthread_mutex_destroy(&globals_get_buffets()[i].mutex_posicao_right[j]);
+        }
+    }
     pthread_join(self->thread, NULL);
     free(self);
 }

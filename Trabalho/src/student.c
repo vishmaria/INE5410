@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
-
+#include <semaphore.h>
 #include "student.h"
 #include "config.h"
 #include "worker_gate.h"
@@ -19,6 +19,7 @@ void* student_run(void *arg)
     while(self->_buffet_position < 0); //enquanto não entrou em um buffet. Não pode se servir.
     student_serve(self);
     student_seat(self, tables);
+    msleep(500);
     student_leave(self, tables);
 
     pthread_exit(NULL);
@@ -26,17 +27,25 @@ void* student_run(void *arg)
 
 void student_seat(student_t *self, table_t *table)
 {
-    /* Insira sua lógica aqui */
     int num_tables = globals_get_tables_number();
     while(1){
-        for(int i = 0; i < num_tables; i++){ //FALTA GARANTIR QUE DOIS CARAS NÃO SENTEM NO MESMO LUGAR
+        for(int i = 0; i < num_tables; i++){ //FALTA GARANTIR QUE DOIS CARAS NÃO SENTEM NO MESMO LUGAR (obs: por que é gay)
             if(table[i]._empty_seats > 0){
+                //estudante senta numa mesa e diminui número de lugares vazios
+                sem_wait(&table[i].sem_lugares);//isso poderia garantir que os caras não estão sentando no mesmo lugar.
+                pthread_mutex_lock(&globals_get_table()[i].mutex_decremento_lugares);
                 table[i]._empty_seats--;
+                self-> _id_table = table[i]._id;
+                pthread_mutex_unlock(&globals_get_table()[i].mutex_decremento_lugares);
+                /*printf("\n\n self-id_table: %d  table-id %d", self->_id_table, table[i]._id);
+                
+                printf("\n aluno: %d esta comendo na mesa %d\n",self->_id, table[i]._id);
+                printf("Restam %d lugares vazios na mesa %d\n\n", table[i]._empty_seats, table[i]._id);*/
                 return;
             }
         }
     }
-    printf("\n Hmmmm estou comendo. Eu, o aluno %d \n",self->_id);
+    
 }
 
 void student_serve(student_t *self)
@@ -46,13 +55,13 @@ void student_serve(student_t *self)
         //printf("estudante %d, buffet %d, fila %c , posicao %d \n",self->_id, self->_id_buffet, self->left_or_right, self->_buffet_position);
         if(self->_wishes[i] == 1){
             if(globals_get_buffets()[self->_id_buffet]._meal[i] < 2){
-            pthread_mutex_lock(&globals_get_buffets()[i].mutex_trocar_comida); // se faltou comida em uma bacia, espera até o chefe destravar.
+              pthread_mutex_lock(&globals_get_buffets()[i].mutex_trocar_comida); // se faltou comida em uma bacia, espera até o chefe destravar.
             }
-            globals_get_buffets()[self->_id_buffet]._meal[i]--; //FALTA VER COMO FAZ PRA 2 CARAS PODEREM PEGAR COMIDA AO MESMO TEMPO SEM ROLO
-            printf("aluno %d pegou comida %d\n", self->_id, i);
+            globals_get_buffets()[self->_id_buffet]._meal[i]--;
+           printf("Aluno %d pegou comida %d, ainda tem %d refeicoes\n", self->_id, i, globals_get_buffets()[self->_id_buffet]._meal[i]);
         }
         buffet_next_step(globals_get_buffets(), self);
-        msleep(1000);
+        //msleep(1000);
     i++;
     }
 
@@ -60,7 +69,17 @@ void student_serve(student_t *self)
 
 void student_leave(student_t *self, table_t *table)
 {
-    /* Insira sua lógica aqui */
+    int num_tables = globals_get_tables_number();
+     for(int i = 0; i < num_tables; i++){ 
+        //estudante sai e aumenta número de lugares vazios:
+        if (self-> _id_table == table[i]._id){
+            table[i]._empty_seats++;
+            sem_post(&table[i].sem_lugares);//isso poderia garantir que os caras não estão sentando no mesmo lugar.
+            //printf("O aluno %d saiu. mesa %d valor atual de empty seat: %d\n", self-> _id, table[i]._id, table[i]._empty_seats);
+            return;
+            
+        }
+    }
     //FALTA MANDAR OS CARAS IREM EMBORA E DEPOIS DISSO PROCURAR OS MUTEXES E SEMAFOROS QUE PRECISAM SER DESTRUIDOS.
 }
 
