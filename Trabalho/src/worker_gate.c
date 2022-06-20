@@ -4,9 +4,9 @@
 #include "globals.h"
 #include "config.h"
 #include <semaphore.h>
-pthread_mutex_t mutex_insere_fila; //mutex para inserir um aluno no fim da fila. 
-pthread_mutex_t mutex_decrementa_alunos; //mutex para evitar datarace na subtração de number_students.
-pthread_mutex_t mutex_ler_fila; //mutex para garantir que exclusão mutua na leitura e escrita da frente da fila.
+pthread_mutex_t mutex_insere_fila; //Mutex para inserir um aluno no fim da fila. 
+pthread_mutex_t mutex_decrementa_alunos; //Mutex para evitar datarace na subtração de number_students.
+pthread_mutex_t mutex_ler_fila; //Mutex para garantir que exclusão mutua na leitura e escrita da frente da fila.
 
 
 
@@ -23,9 +23,7 @@ void worker_gate_look_queue()
 void worker_gate_remove_student()
 {
     //Remove o primeiro estudante da fila e o insere no buffet.
-    //pthread_mutex_lock(&mutex_ler_fila); 
     student_t *student = queue_remove(globals_get_queue());
-    //pthread_mutex_unlock(&mutex_ler_fila);
     buffet_t *buffets = globals_get_buffets();
     buffet_queue_insert(buffets, student);
     //printf("Removi o estudante %d da fila do Ru\n\n", student-> _id);
@@ -68,7 +66,7 @@ void *worker_gate_run(void *arg)
 
     number_students = *((int *)arg);
 
-    while (number_students > 1)
+    while (number_students > 0)
     {
         worker_gate_look_queue(); //Ve se a fila não esta vazia
         worker_gate_look_buffet(); //Olha para ver se e onde tem lugar vazio nas primeiras posições dos buffets e define onde o primeiro estudante da fila vai.
@@ -76,10 +74,8 @@ void *worker_gate_run(void *arg)
         pthread_mutex_lock(&mutex_decrementa_alunos); 
         number_students--; //reduz o numero de estudantes da fila.
         pthread_mutex_unlock(&mutex_decrementa_alunos);
-        //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }
     globals_set_students(0);
-    printf("\n\nAcabou gente na fila externa\n\n");
     pthread_exit(NULL);
 }
 
@@ -92,7 +88,7 @@ void worker_gate_init(worker_gate_t *self)
     pthread_mutex_init(&mutex_ler_fila, 0);
     for (int i = 0; i < number_of_tables; i++)
     {
-        sem_init(&globals_get_table()[i].sem_lugares, 0, globals_get_seats_number()); //ATENÇÃO: TEM QUE DESTRUIR ESSA PORRA.
+        sem_init(&globals_get_table()[i].sem_lugares, 0, globals_get_seats_number());
         pthread_mutex_init(&globals_get_table()[i].mutex_decremento_lugares, 0);
         
     }
@@ -101,9 +97,17 @@ void worker_gate_init(worker_gate_t *self)
 
 void worker_gate_finalize(worker_gate_t *self)
 {   
+    //Destrução de mutexes e semáforos criados porque não é possível alterar métodos finalize()
     pthread_mutex_destroy(&mutex_insere_fila);
     pthread_mutex_destroy(&mutex_decrementa_alunos);
     pthread_mutex_destroy(&mutex_ler_fila);
+    
+
+    for(int j = 0; j < globals_get_tables_number(); j++){
+        pthread_mutex_destroy(&globals_get_table()[j].mutex_decremento_lugares);
+        sem_destroy(&globals_get_table()[j].sem_lugares);
+    }
+
     for (int i = 0; i < globals_get_buffets_number(); i++)
     {
         pthread_mutex_destroy(&globals_get_buffets()[i].mutex_trocar_comida);
@@ -111,6 +115,8 @@ void worker_gate_finalize(worker_gate_t *self)
         for(int j= 0; j< 5; j++){
             pthread_mutex_destroy(&globals_get_buffets()[i].mutex_posicao_left[j]);
             pthread_mutex_destroy(&globals_get_buffets()[i].mutex_posicao_right[j]);
+            sem_destroy(&globals_get_buffets()[i].sem_meal[j]);
+
         }
     }
     pthread_join(self->thread, NULL);

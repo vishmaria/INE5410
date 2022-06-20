@@ -10,11 +10,13 @@ typedef struct buffet
 {
     int _id;
     int _meal[5];
-    pthread_mutex_t mutex_trocar_comida;
+    sem_t sem_meal[5]; //Um semaforo para cada opção
+    pthread_mutex_t mutex_trocar_comida; //Mutex para impedir que aluno se sirva enquanto chef repõe comida
     pthread_mutex_t mutex_posicao_left[5];
     pthread_mutex_t mutex_posicao_right[5];
     int queue_left[5];
     int queue_right[5];
+    int vazio;
     
     pthread_t thread; /* Thread do buffet   */
 } buffet_t;

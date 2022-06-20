@@ -35,6 +35,7 @@ void buffet_init(buffet_t *self, int number_of_buffets)
         /* Inicia com 40 unidades de comida em cada bacia */
         for(j = 0; j < 5; j++)
             self[i]._meal[j] = 40;
+            sem_init(self[i].sem_meal[j], 40); //cada semáforo inicia com 40 unidadas
 
         /* dobra a quantidade de bacias e diminui pela metade a quantidade de comida em cada uma
          dessa forma 2 alunos na mesma posição de buffet em filas diferentes podem pegar o mesmo item

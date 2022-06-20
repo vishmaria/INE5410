@@ -3,15 +3,27 @@
 #include "chef.h"
 #include "config.h"
 
-//variável global para o buffet que precisa de reposição de alimento
-int *refeicao_repor = NULL; 
+//variável global para a refeição que acabou:
+int refeicao_repor; 
+//variável global para o buffet que precisa de reposição de alimento:
+int buffet_repor;
 
 void *chef_run()
 {
     while (TRUE)
     {
+        int buffets_vazios = 0;
         chef_check_food();
-        //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
+        for(int i = 0; i<globals_get_buffets_number(); i++){
+            if(globals_get_buffets()[i].vazio ==1){
+                //Incrementando número de buffets vazios:
+                buffets_vazios++;
+            }
+        }
+        //Se todos os buffets estão vazios o chef descansa:
+        if(buffets_vazios == globals_get_buffets_number()){
+            break;
+        }
     }
     
     pthread_exit(NULL);
@@ -20,38 +32,39 @@ void *chef_run()
 
 void chef_put_food()
 {
-    //Comida volta a quantidade máxima
-    *refeicao_repor = 40;
-    return;    
+//Chef faz post nas refeições do semáforo para repor comida:
+    for (int i = 0; i< 40; i++){
+        sem_post(&globals_get_buffets()[buffet_repor].sem_meal[refeicao_repor]);
+    }
+    return;
+     
 }
 void chef_check_food()
 {
     int num_buffets = globals_get_buffets_number();
-    //evita que a função tente vericar os buffets antes que sejam inicializados:
+    int enough_meal;
+    //Evita que a função tente vericar os buffets antes que sejam inicializados:
     if(globals_get_buffets() == NULL) return;
+
         for(int i = 0; i< num_buffets; i++){
-            //se o mutex foi trancado por outra função pode por comida:
-            if((pthread_mutex_trylock(&globals_get_buffets()[i].mutex_trocar_comida)) == -1){ 
-                printf("TRAVEI TODO O BUFFET\n");
-                 for(int x = 0; x<5;x++){                                               
-                    if(globals_get_buffets()[i]._meal[x] < 2){ // verifica em qual posição da fila está faltando comida.
-                        //informa a comida faltante e chama o chefe para colocar mais:
-                        refeicao_repor = &globals_get_buffets()[i]._meal[x];
+                 for(int x = 0; x < 5;x++){
+                    sem_getvalue(&globals_get_buffets()[i].sem_meal[x], &enough_meal);
+                    //Se valor do semáforo é 0, acabou comida:
+                    if (enough_meal < 1){
+                        refeicao_repor = x;
+                        buffet_repor = i;
                         chef_put_food();
-                        //libera a fila trancada.
-                        pthread_mutex_unlock(&globals_get_buffets()[i].mutex_trocar_comida);
-                        printf("TROCANDO A BACIA DE COMIDA %d\n", x); //FIX: DELETAR ANTES DE ENVIAR
-                        
+                        //Liberar o aluno de se servir só apos reabastecimento:
+                        pthread_mutex_unlock(&globals_get_buffets()[i].mutex_trocar_comida);  
                         break;
-                    }
-                    }
-                
-            }
-            //check_food() trancou o mutex em vez do estudante, deve liberar:
-            else pthread_mutex_unlock(&globals_get_buffets()[i].mutex_trocar_comida);
+                    }                               
+
+                    
+                    
+                }
         }
-    
 }
+    
 
 /* --------------------------------------------------------- */
 /* ATENÇÃO: Não será necessário modificar as funções abaixo! */
