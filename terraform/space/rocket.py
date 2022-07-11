@@ -28,8 +28,12 @@ class Rocket:
         # usar essa função.
         self.simulation_time_voyage(planet)
         failure =  self.do_we_have_a_problem()
-        self.nuke(planet)
+        if failure == True:
+            print("Tristeza") #DELETAR NO FINAL
+            #notificar o semaforo de foguetes (se isso for algo que exista. Acredito que vai existir)
 
+        self.nuke(planet)
+        #na função voyage teremos que definir que se o foguete é do tipo LION a única viagem possível que ele pode fazer é para a Lua e ele não irá executar nuke()
 
 
     ####################################################
@@ -52,13 +56,13 @@ class Rocket:
                 return True
         return False
             
-    def general_failure(self):
+    def general_failure(self): # Missão fracassada. Sinaliza para o envio de outro foguete (sinalização feita em Voyage ou do_we_have_a_problem)
         print(f"[GENERAL FAILURE] - {self.name} ROCKET id: {self.id}")
     
-    def meteor_collision(self):
+    def meteor_collision(self): # Missão fracassada. Sinaliza para o envio de outro foguete (sinalização feita em Voyage ou do_we_have_a_problem)
         print(f"[METEOR COLLISION] - {self.name} ROCKET id: {self.id}")
 
-    def successfull_launch(self, base):
+    def successfull_launch(self, base): #Missão bem sucedida. Sinaliza para o envio de outro foguete
         if random() <= 0.1:
             print(f"[LAUNCH FAILED] - {self.name} ROCKET id:{self.id} on {base.name}")
             return False
