@@ -1,3 +1,4 @@
+from multiprocessing import Semaphore
 from threading import Lock
 
 #  A total alteração deste arquivo é permitida.
@@ -18,6 +19,11 @@ from threading import Lock
 mutex_armazenamento = {'ALCANTARA': Lock(), 'CANAVERAL CAPE': Lock(), 'MOSCOW': Lock(), 'MOON': Lock()}
 mutex_mina_urânio = Lock()
 mutex_mina_combustivel = Lock()
+satelites_de_leitura = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
+semaforo_planeta = {'mars': Semaphore(2), 'io': Semaphore(2), 'ganimedes': Semaphore(2), 'europa': Semaphore(2)} #satelites
+mutex_polo_norte = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
+mutex_polo_sul = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
+
 
 release_system = False
 mutex_print = Lock()

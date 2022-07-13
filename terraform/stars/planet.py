@@ -31,3 +31,5 @@ class Planet(Thread):
 
         while(True):
             self.nuke_detected()
+            if self.terraform < 1:
+                print(f"{self.name} está habitavel")

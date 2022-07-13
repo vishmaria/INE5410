@@ -1,6 +1,6 @@
 from random import randrange, random
 from time import sleep
-
+import globals
 
 class Rocket:
 
@@ -16,10 +16,15 @@ class Rocket:
             
 
     def nuke(self, planet): # Permitida a alteração
-        self.damage()
-        print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on North Pole")
-        print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on South Pole")
-        pass
+        planet.terraform -= self.damage() #causa dano ao planeta
+        if not(globals.mutex_polo_norte[planet.name.lower()].locked()):
+            with globals.mutex_polo_norte[planet.name.lower()]:
+                print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on North Pole")
+                return
+        if not(globals.mutex_polo_norte[planet.name.lower()].locked()):
+            with globals.mutex_polo_norte[planet.name.lower()]:
+                print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on South Pole")
+                return
     
     def voyage(self, planet): # Permitida a alteração (com ressalvas)
 
@@ -27,12 +32,15 @@ class Rocket:
         # Você pode inserir código antes ou depois dela e deve
         # usar essa função.
         self.simulation_time_voyage(planet)
+        
         failure =  self.do_we_have_a_problem()
         if failure == True:
             print("Tristeza") #DELETAR NO FINAL
             #notificar o semaforo de foguetes (se isso for algo que exista. Acredito que vai existir)
-
-        self.nuke(planet)
+        else:
+            self.nuke(planet)
+        
+        
         #na função voyage teremos que definir que se o foguete é do tipo LION a única viagem possível que ele pode fazer é para a Lua e ele não irá executar nuke()
 
 
@@ -69,9 +77,10 @@ class Rocket:
         return True
     
     def damage(self):
-        return random()
+        return 20
+        #return random()
 
     def launch(self, base, planet):
         if(self.successfull_launch(base)):
-            print(f"[{self.name} - {self.id}] launched.")
+            print(f"[{self.name} - {self.id}] launched from {base.name}.")
             self.voyage(planet)        

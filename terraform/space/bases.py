@@ -1,3 +1,4 @@
+from time import sleep
 import globals
 from threading import Thread
 from space.rocket import Rocket
@@ -106,23 +107,68 @@ class SpaceBase(Thread):
                         self.uranium += 35 # Reabastece
 
     def build_rocket(self):
+        valor_max = 3
+        if self.name == 'MOON': #A base lunar não pode construir o foguete LION
+            valor_max = 2
         if self.rockets < self.constraints[2]:
-            foguete_construido = randint(1,3)
+            foguete_construido = randint(1,valor_max)
             #como armazenar esses foguetes? uma lista? acho que sim
             match foguete_construido:
                 case 1:
-                    pass #constroi um DRAGON
+                    self.foguetes_estacionados.append(Rocket('DRAGON')) #constroi um DRAGON
+                    self.base_rocket_resources(self.foguetes_estacionados[len(self.foguetes_estacionados)-1])
                 case 2:
-                    pass #constroi um FALCON
+                    self.foguetes_estacionados.append(Rocket('FALCON'))#constroi um FALCON
+                    self.base_rocket_resources(self.foguetes_estacionados[len(self.foguetes_estacionados)-1])
                 case 3:
-                    pass #constroi um LION
-            self.rockets += 1
-        pass    
+                    self.foguetes_estacionados.append(Rocket('LION')) #constroi um LION
+                    self.base_rocket_resources(self.foguetes_estacionados[len(self.foguetes_estacionados)-1])
+            self.rockets += 1   
 
-    def launch_rocket(self, rocket): #chama a função rocket.launch() com os parametros certinhos. Tem que dar preferência pra lançamento de Lions para a Lua caso seja chamado.
-        pass
+    def launch_rocket(self): #chama a função rocket.launch() com os parametros certinhos. Tem que dar preferência pra lançamento de Lions para a Lua caso seja chamado.
+        if len(self.foguetes_estacionados)>0: # não pode lançar um foguete se não tem nenhum foguete estacionado
+            planetas = globals.get_planets_ref()
+            alvo = False
+            if len(self.foguetes_estacionados) >1:
+                foguete_lançado = randint(0,len(self.foguetes_estacionados)-1)
+            else:
+                foguete_lançado = 0
+            
+            if not(globals.satelites_de_leitura['mars'].locked()): #ve se o satelite para ler habitabilidade de marte está disponível
+                with globals.satelites_de_leitura['mars']:
+                    if planetas['mars'].terraform > 0: #se o planeta ainda não estiver terraformado
+                        globals.semaforo_planeta['mars'].acquire() #lança um foguete para marte e tranca o semaforo para o planeta
+                        alvo = planetas['mars'] # coloca marte como alvo do foguete
+
+            elif not(globals.satelites_de_leitura['io'].locked()):
+                with globals.satelites_de_leitura['io']:
+                    if planetas['io'].terraform > 0:
+                        globals.semaforo_planeta['io'].acquire()
+                        alvo = planetas['io']
+            
+            elif not(globals.satelites_de_leitura['ganimedes'].locked()):
+                with globals.satelites_de_leitura['ganimedes']:
+                    if planetas['ganimedes'].terraform > 0:
+                        globals.semaforo_planeta['ganimedes'].acquire()
+                        alvo = planetas['ganimedes']
+            
+            elif not(globals.satelites_de_leitura['europa'].locked()):
+                with globals.satelites_de_leitura['europa']:
+                    if planetas['europa'].terraform > 0:
+                        globals.semaforo_planeta['europa'].acquire()
+                        alvo = planetas['europa']
+
+            if(alvo == False):         
+                return  
+            else:    
+                self.foguetes_estacionados[foguete_lançado].launch(self, alvo)
+                globals.semaforo_planeta[alvo.name.lower()].release() #independente do resultado da missão, o próximo foguete pode ser lançado.
+                self.foguetes_estacionados.remove(self.foguetes_estacionados[foguete_lançado]) #tira o foguete lançado da lista de foguetes estacionados
+                self.rockets -= 1
+        #print("\n\nNÃO TEM FOGUETES\n\n")
 
     def run(self): #Thread dos foguetes [A FAZER]
+        self.foguetes_estacionados = []
         globals.acquire_print()
         self.print_space_base_info()
         globals.release_print()
@@ -132,7 +178,9 @@ class SpaceBase(Thread):
             pass
 
         while(True):
-            self.print_space_base_info()
+            #self.print_space_base_info()
             self.refuel_oil()
             self.refuel_uranium()
+            self.build_rocket()
+            self.launch_rocket()
             pass

@@ -23,9 +23,10 @@ class StoreHouse(Thread):
         print(f"🔨 - [{self.location}] - {self.unities} uranium unities are produced.")
 
     def produce(self):
-        if(self.unities < self.constraint):
-            self.unities+=15
-            self.print_store_house()
+        with globals.mutex_mina_combustivel:
+            if(self.unities < self.constraint):
+                self.unities+=15
+                #self.print_store_house()
         sleep(0.001)
         
 
