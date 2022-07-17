@@ -25,11 +25,10 @@ semaforo_planeta = {'mars': Semaphore(2), 'io': Semaphore(2), 'ganimedes': Semap
 mutex_polo_norte = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
 mutex_polo_sul = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
 
-flag_lua_com_falta = False
-semaforo_abastecimento_lua = Semaphore(0)
 
 
-semaforo_limite_foguetes_ativos = Semaphore(50) #Pra evitar que o computador exploda
+
+semaforo_limite_foguetes_ativos = Semaphore(200) #Pra evitar que o computador exploda
 
 release_system = False
 mutex_print = Lock()

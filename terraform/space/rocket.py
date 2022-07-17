@@ -40,7 +40,6 @@ class Rocket:
             
             failure =  self.do_we_have_a_problem()
             if failure == True:
-                print("Tristeza") #DELETAR NO FINAL
                 globals.semaforo_limite_foguetes_ativos.release()
                 return
             else:
@@ -49,16 +48,14 @@ class Rocket:
                     print("LION RETO PRA LUA")
                     globals.get_bases_ref()['moon'].fuel += self.fuel_cargo
                     globals.get_bases_ref()['moon'].uranium += self.uranium_cargo
-                    print("LUA ABASTECIDA")
+                    #print("LUA ABASTECIDA")
+                    
                     if globals.get_bases_ref()['moon'].fuel > globals.get_bases_ref()['moon'].constraints[1]: #se chegar mais material do que pode ser armazenado, o resto é descartado
                         globals.get_bases_ref()['moon'].fuel = globals.get_bases_ref()['moon'].constraints[1]
 
                     if globals.get_bases_ref()['moon'].uranium > globals.get_bases_ref()['moon'].constraints[0]: #se chegar mais material do que pode ser armazenado, o resto é descartado
                         globals.get_bases_ref()['moon'].uranium = globals.get_bases_ref()['moon'].constraints[0]
-                    globals.flag_lua_com_falta = False
-                    globals.semaforo_limite_foguetes_ativos.release()
-                    globals.semaforo_abastecimento_lua.release()
-                    
+                    globals.semaforo_limite_foguetes_ativos.release()                  
                     return
      
 
@@ -113,12 +110,10 @@ class Rocket:
         return True
     
     def damage(self):
-        #return 1
-        return random()
+        return 10
+        #return random()
 
     def launch(self, base, planet):
         if(self.successfull_launch(base)):
             print(f"[{self.name} - {self.id}] launched from {base.name}.")
-            if base.name == 'MOON':
-                base.print_space_base_info()
             self.voyage(planet)        

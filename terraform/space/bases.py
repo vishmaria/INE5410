@@ -1,5 +1,6 @@
 from time import sleep
 import globals
+import os
 from threading import Thread
 from space.rocket import Rocket
 from random import choice, randint
@@ -81,10 +82,8 @@ class SpaceBase(Thread):
 
     def refuel_oil(self):
         #Reestoca base
-        if self.name == 'MOON': #a lua não tem acesso as minas da terra. toda a carga vem do foguete LION
-            with globals.mutex_armazenamento['MOON']: #Mutex para realizar leitura atômica do armazem da lua
-                if self.fuel < 90: #90 por que é a quantidade de combustivel necessária para lançar o maior foguete da Lua
-                    pass
+        if self.name == 'MOON':
+            pass
         else:
             if self.fuel < self.constraints[1]:
                 mina_combustivel = globals.get_mines_ref()['oil_earth']
@@ -99,10 +98,8 @@ class SpaceBase(Thread):
 
     def refuel_uranium(self):
         #Reestoca base
-        if self.name == 'MOON': #a lua não tem acesso as minas da terra. toda a carga vem do foguete LION
-            with globals.mutex_armazenamento['MOON']: #Mutex para realizar leitura atômica do armazem da lua
-                if self.uranium < 35: 
-                    pass
+        if self.name == 'MOON':
+            pass
         else:
             if self.uranium < self.constraints[0]:
                 mina_uranio = globals.get_mines_ref()['uranium_earth']
@@ -116,9 +113,9 @@ class SpaceBase(Thread):
 
     def build_rocket(self):
         valor_max = 3
+
         if self.name == 'MOON': #A base lunar não pode construir o foguete LION
             valor_max = 2
-    
         if self.rockets < self.constraints[2]:
             foguete_construido = randint(1,valor_max)
             #como armazenar esses foguetes? uma lista? acho que sim
@@ -145,43 +142,40 @@ class SpaceBase(Thread):
             planetas = globals.planets
             satelite = globals.satelites_de_leitura
             alvo = False
-            if globals.flag_lua_com_falta:
-                for i in self.foguetes_estacionados:
-                    #print(i.name)
-                    if i.name == 'LION':
-                        foguete_selecionado = i
-                        alvo = True
-                        break
                 
+                    
+            if len(planetas)>1:
+                random_target_number = randint(0, len(planetas)-1)
+            else:
+                random_target_number = 0
+            if self.rockets > 1:
+                num_foguete = randint(0, self.rockets-1) # escolhe aleatóriamente entre os x foguetes estacionados
+                foguete_selecionado = self.foguetes_estacionados[num_foguete]
+            else:
+                num_foguete = 0
+                foguete_selecionado = self.foguetes_estacionados[num_foguete]
 
-            else:        
-                if len(planetas)>1:
-                    random_target_number = randint(0, len(planetas)-1)
-                else:
-                    random_target_number = 0
-                if self.rockets > 1:
-                    num_foguete = randint(0, self.rockets-1) # escolhe aleatóriamente entre os x foguetes estacionados
-                    foguete_selecionado = self.foguetes_estacionados[num_foguete]
-                else:
-                    num_foguete = 0
-                    foguete_selecionado = self.foguetes_estacionados[num_foguete]
-
+            if foguete_selecionado.name == "LION":
+                with globals.mutex_armazenamento['MOON']:
+                    if (globals.get_bases_ref()['moon'].uranium>35 and globals.get_bases_ref()['moon'].fuel > 90):
+                        print("\nlua abastecida\n") # SE A BASE DECIDIR LANÇAR UM FOGUETE LION MAS A LUA SINALIZAR QUE NÃO PRECISA DE RECURSOS, O FOGUETE NÃO RECEBERA UM ALVO E NÃO SERÁ LANÇADO
+                        return
+            
+            for i, key in enumerate(planetas.keys()): #enumera as chaves
+                if i == random_target_number: #ao chegar na chave equivalente ao numero gerado aleatóriamente
+                    #print(planetas[key].name) #USO PRA DEBUG, DELETAR DEPOIS
+                    with satelite[planetas[key].name.lower()]: #ativa o mutex do planeta
+                        if planetas[key].terraform > 0: #checa se o planeta ainda deve ser terraformado
+                            alvo = planetas[key]       #seta o planeta como alvo para lançamento       
+                            break
                 
-                for i, key in enumerate(planetas.keys()): #enumera as chaves
-                    if i == random_target_number: #ao chegar na chave equivalente ao numero gerado aleatóriamente
-                        #print(planetas[key].name) #USO PRA DEBUG, DELETAR DEPOIS
-                        with satelite[planetas[key].name.lower()]: #ativa o mutex do planeta
-                            if planetas[key].terraform > 0: #checa se o planeta ainda deve ser terraformado
-                                alvo = planetas[key]       #seta o planeta como alvo para lançamento       
-                        break
-
+                
             
             if (alvo): #se algum alvo foi adquirido:
                 if self.name == 'MOON':
                     self.print_space_base_info()
                 globals.semaforo_limite_foguetes_ativos.acquire()
-                if foguete_selecionado.name == "LION":
-                    print("QUERO LANÇAR O LION")
+                
                 Thread(target=foguete_selecionado.launch, args=(self, alvo)).start()
                 #foguete_selecionado.launch(self, alvo)
                 self.foguetes_estacionados.remove(foguete_selecionado) #tira o foguete lançado da lista de foguetes estacionados
@@ -209,7 +203,7 @@ class SpaceBase(Thread):
             self.refuel_uranium()
             self.build_rocket()
             self.launch_rocket()
-            if globals.planets == {}:
-                print("ACABOU")
-                exit()
+            if globals.planets == {}: #Quando não sobrar mais planetas não habitaveis
+                print("TODOS OS PLANETAS ESTÃO TERRAFORMADOS")
+                os._exit(os.X_OK) # comando para matar o processo.
             pass
