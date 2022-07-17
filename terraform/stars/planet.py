@@ -25,11 +25,14 @@ class Planet(Thread):
         globals.acquire_print()
         self.print_planet_info()
         globals.release_print()
+        coisa_pra_teste = True
 
         while(globals.get_release_system() == False):
             pass
 
         while(True):
             self.nuke_detected()
-            if self.terraform < 1:
-                print(f"{self.name} está habitavel")
+            if self.terraform < 1 and coisa_pra_teste:
+                print(f"\n\n{self.name} está habitavel\n\n")
+                globals.planets.pop(self.name.lower())
+                coisa_pra_teste = False
