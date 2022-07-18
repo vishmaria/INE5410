@@ -14,7 +14,7 @@ class Planet(Thread):
     def nuke_detected(self):
         while(self.terraform > 0):
             before_percentage = self.terraform
-            while(before_percentage == self.terraform):
+            while(before_percentage == self.terraform): #Enquanto não for nukado, não faz nada
                 pass
             print(f"[NUKE DETECTION] - The planet {self.name} was bombed. {self.terraform}% UNHABITABLE")
 
@@ -34,4 +34,4 @@ class Planet(Thread):
             if self.terraform < 1:
                 print(f"\n\n{self.name} está habitavel\n\n")
                 globals.planets.pop(self.name.lower()) #Se um planeta fica habitável ele sai do dicionário de planetas. 
-                return
+                return #finaliza
