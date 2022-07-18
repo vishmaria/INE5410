@@ -10,22 +10,22 @@ from threading import Lock, Condition
 #  muito utilizado em frontend em libraries como o React, utilizam a filosofia de um store
 #  global de estados da aplicação e está presente em sistemas robustos pelo mundo.
 
-#A FAZER:
-#  SEMAFOROS BINÁRIOS PARA LEITURA DO PROGRESSO DE TERRAFORMING DE CADA PLANETA (1 SATELITE)/(PLANETA)
-#  SEMAFORO DE 2 PARA A O ENVIO DE OGIVAS PARA O MESMO PLANETA (como um dos foguetes pode explodir no meio do caminho, este semaforo vai poder ser liberado se falhar para mandarem outro no lugar ou se detonar)
-#  SEMAFORO BINÁRIO PARA A DETONAÇÃO DE APENAS UMA OGIVA POR VEZ EM CADA PLANETA
-#  
 
-#Declarando dicionário de Lock() para acesso ao armazem de urânio e combustível de cada base onde a chave é o nome da base
+
+# Declarando dicionário de Lock() para acesso ao armazem de urânio e combustível de cada base onde a chave é o nome da base
 mutex_armazenamento = {'ALCANTARA': Lock(), 'CANAVERAL CAPE': Lock(), 'MOSCOW': Lock(), 'MOON': Lock()}
+# Mutex para acesso a mina de urãnio
 mutex_mina_urânio = Lock()
+# Mutex para acesso a mina de urãnio
 mutex_mina_combustivel = Lock()
+# Dicionário de Lock() para leitura de habitabilidade de cada planeta
 satelites_de_leitura = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
-semaforo_planeta = {'mars': Semaphore(2), 'io': Semaphore(2), 'ganimedes': Semaphore(2), 'europa': Semaphore(2)} #satelites
+# Dicionários de Semaforos para limitar a quantidade de explosões simultâneas em um planeta
+semaforo_planeta = {'mars': Semaphore(2), 'io': Semaphore(2), 'ganimedes': Semaphore(2), 'europa': Semaphore(2)}
+# Mutex para garantir que apenas 1 explosão por vez ocorrera no polo norte de um planeta
 mutex_polo_norte = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
+# Mutex para garantir que apenas 1 explosão por vez ocorrera no polo norte de um planeta
 mutex_polo_sul = {'mars': Lock(), 'io':Lock(), 'ganimedes': Lock(), 'europa': Lock()}
-
-
 
 
 semaforo_limite_foguetes_ativos = Semaphore(200) #Pra evitar que o computador exploda
@@ -69,11 +69,11 @@ def get_mines_ref():
     global mines
     return mines
 
-def set_release_system(): #Libera a execução da simulação
+def set_release_system():
     global release_system
     release_system = True
 
-def get_release_system(): #Retorna se a simulação está sendo executada
+def get_release_system():
     global release_system
     return release_system
 
@@ -88,12 +88,4 @@ def get_simulation_time():
 def get_locks_armazem():
     global mutex_armazenamento #tem que fazer isso?
     return mutex_armazenamento
-
-def get_lock_mina_uranio():
-    global mutex_mina_urânio #tem que fazer isso?
-    return mutex_mina_urânio  
-
-def get_lock_mina_combustivel():
-    global mutex_mina_combustivel #tem que fazer isso?
-    return mutex_mina_combustivel
 

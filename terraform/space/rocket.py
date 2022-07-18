@@ -36,19 +36,19 @@ class Rocket:
         # Você pode inserir código antes ou depois dela e deve
         # usar essa função.
 
-        if self.name == "LION":
+        if self.name == "LION": # o tempo de viagem da terra até a lua é insignificante então será ignorado
             
             failure =  self.do_we_have_a_problem()
-            if failure == True:
+
+            if failure == True: #em caso de falha, libera um espaço para foguete e termina
                 globals.semaforo_limite_foguetes_ativos.release()
                 return
+
             else:
                 
                 with globals.mutex_armazenamento['MOON']:
-                    print("LION RETO PRA LUA")
-                    globals.get_bases_ref()['moon'].fuel += self.fuel_cargo
-                    globals.get_bases_ref()['moon'].uranium += self.uranium_cargo
-                    #print("LUA ABASTECIDA")
+                    globals.get_bases_ref()['moon'].fuel += self.fuel_cargo #abastece a lua com combustível carregado pelo LION
+                    globals.get_bases_ref()['moon'].uranium += self.uranium_cargo #abastece a lua com urânio carregado pelo LION
                     
                     if globals.get_bases_ref()['moon'].fuel > globals.get_bases_ref()['moon'].constraints[1]: #se chegar mais material do que pode ser armazenado, o resto é descartado
                         globals.get_bases_ref()['moon'].fuel = globals.get_bases_ref()['moon'].constraints[1]
@@ -62,10 +62,9 @@ class Rocket:
         self.simulation_time_voyage(planet)
         failure =  self.do_we_have_a_problem()
 
-        if failure == True:
-            print("Tristeza") #DELETAR NO FINAL
+        if failure == True: #em caso de falha, libera um espaço para foguete e termina
             globals.semaforo_limite_foguetes_ativos.release()
-            #notificar o semaforo de foguetes (se isso for algo que exista. Acredito que vai existir)
+            #notifica o semaforo de foguetes
         
         
         
@@ -73,7 +72,6 @@ class Rocket:
             self.nuke(planet)
         
         
-        #na função voyage teremos que definir que se o foguete é do tipo LION a única viagem possível que ele pode fazer é para a Lua e ele não irá executar nuke()
 
 
     ####################################################
@@ -110,8 +108,7 @@ class Rocket:
         return True
     
     def damage(self):
-        return 10
-        #return random()
+        return random()
 
     def launch(self, base, planet):
         if(self.successfull_launch(base)):

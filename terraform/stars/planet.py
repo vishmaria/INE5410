@@ -25,14 +25,13 @@ class Planet(Thread):
         globals.acquire_print()
         self.print_planet_info()
         globals.release_print()
-        coisa_pra_teste = True
 
         while(globals.get_release_system() == False):
             pass
 
         while(True):
             self.nuke_detected()
-            if self.terraform < 1 and coisa_pra_teste:
+            if self.terraform < 1:
                 print(f"\n\n{self.name} está habitavel\n\n")
-                globals.planets.pop(self.name.lower())
-                coisa_pra_teste = False
+                globals.planets.pop(self.name.lower()) #Se um planeta fica habitável ele sai do dicionário de planetas. 
+                return

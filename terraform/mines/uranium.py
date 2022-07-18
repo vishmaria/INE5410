@@ -26,11 +26,12 @@ class StoreHouse(Thread):
         with globals.mutex_mina_combustivel:
             if(self.unities < self.constraint):
                 self.unities+=15
-                #self.print_store_house()
+                self.print_store_house() #Se for possível deletar esse print o código vai muito mais rápido
         sleep(0.001)
         
 
     def run(self):
+
         globals.acquire_print()
         self.print_store_house()
         globals.release_print()

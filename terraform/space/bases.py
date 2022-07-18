@@ -131,7 +131,6 @@ class SpaceBase(Thread):
                     
             
             if not(self.base_rocket_resources(self.foguetes_estacionados[self.rockets-1])): #abastece o foguete recém-criado com urânio e combustível
-                #print(f"{self.name} não possui os recursos para montar este foguete") #DELETAR
                 self.foguetes_estacionados.remove(self.foguetes_estacionados[self.rockets-1]) #Se a base não tem combustível ou urânio o suficiente, o foguete não é abastecido
             else:
                 self.rockets += 1
@@ -158,12 +157,11 @@ class SpaceBase(Thread):
             if foguete_selecionado.name == "LION":
                 with globals.mutex_armazenamento['MOON']:
                     if (globals.get_bases_ref()['moon'].uranium>35 and globals.get_bases_ref()['moon'].fuel > 90):
-                        print("\nlua abastecida\n") # SE A BASE DECIDIR LANÇAR UM FOGUETE LION MAS A LUA SINALIZAR QUE NÃO PRECISA DE RECURSOS, O FOGUETE NÃO RECEBERA UM ALVO E NÃO SERÁ LANÇADO
+                        # SE A BASE DECIDIR LANÇAR UM FOGUETE LION MAS A LUA SINALIZAR QUE NÃO PRECISA DE RECURSOS, O FOGUETE NÃO RECEBERA UM ALVO E NÃO SERÁ LANÇADO
                         return
             
             for i, key in enumerate(planetas.keys()): #enumera as chaves
                 if i == random_target_number: #ao chegar na chave equivalente ao numero gerado aleatóriamente
-                    #print(planetas[key].name) #USO PRA DEBUG, DELETAR DEPOIS
                     with satelite[planetas[key].name.lower()]: #ativa o mutex do planeta
                         if planetas[key].terraform > 0: #checa se o planeta ainda deve ser terraformado
                             alvo = planetas[key]       #seta o planeta como alvo para lançamento       
@@ -172,38 +170,32 @@ class SpaceBase(Thread):
                 
             
             if (alvo): #se algum alvo foi adquirido:
-                if self.name == 'MOON':
-                    self.print_space_base_info()
-                globals.semaforo_limite_foguetes_ativos.acquire()
                 
+                globals.semaforo_limite_foguetes_ativos.acquire()
                 Thread(target=foguete_selecionado.launch, args=(self, alvo)).start()
                 #foguete_selecionado.launch(self, alvo)
                 self.foguetes_estacionados.remove(foguete_selecionado) #tira o foguete lançado da lista de foguetes estacionados
                 self.rockets -= 1
 
 
-    def run(self): #Thread dos foguetes [A FAZER]
+    def run(self):
         self.foguetes_estacionados = []
         globals.acquire_print()
         self.print_space_base_info()
         globals.release_print()
         
 
-        while(globals.get_release_system() == False):
+        while(globals.get_release_system() == False): #enquanto a simulação não é totalmente inicializada: não faz nada
             pass
 
         while(True):
 
             
-            if(self.uranium < 0 or self.fuel < 0 or self.uranium > self.constraints[0] or self.fuel > self.constraints[1]): #Deletar depois. Só pra debugar
-                self.print_space_base_info()
-                exit()
-            
             self.refuel_oil()
             self.refuel_uranium()
             self.build_rocket()
             self.launch_rocket()
-            if globals.planets == {}: #Quando não sobrar mais planetas não habitaveis
+            if globals.planets == {}: #Quando o dicionário de planetas fica vazio significa que todos os planetas estão habitaveis e o processo pode ser finalizado.
                 print("TODOS OS PLANETAS ESTÃO TERRAFORMADOS")
                 os._exit(os.X_OK) # comando para matar o processo.
             pass
