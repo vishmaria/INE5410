@@ -27,10 +27,18 @@ class Pipeline(Thread):
         with globals.mutex_mina_urânio:
             if(self.unities < self.constraint):
                 self.unities += 17
+<<<<<<< HEAD
                 #self.print_pipeline()
         sleep(0.001)
 
     def run(self):
+=======
+                self.print_pipeline() #Se for possível deletar esse print o código vai muito mais rápido
+        sleep(0.001)
+
+    def run(self):
+        
+>>>>>>> origin/HEAD
         globals.acquire_print()
         self.print_pipeline()
         globals.release_print()

@@ -16,6 +16,7 @@ class Rocket:
             
 
     def nuke(self, planet): # Permitida a alteração
+<<<<<<< HEAD
         planet.terraform -= self.damage() #causa dano ao planeta
         if not(globals.mutex_polo_norte[planet.name.lower()].locked()):
             with globals.mutex_polo_norte[planet.name.lower()]:
@@ -25,23 +26,76 @@ class Rocket:
             with globals.mutex_polo_norte[planet.name.lower()]:
                 print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on South Pole")
                 return
+=======
+
+        with globals.semaforo_planeta[planet.name.lower()]: # Só permite que 2 nukes explodam por vez
+            if planet.terraform <= 0: #Foguetes orbitando um planeta totalmente terraformado se detonam
+                return
+            planet.terraform -= self.damage() #causa dano ao planeta
+            globals.semaforo_limite_foguetes_ativos.release() # depois que o foguet explodiu, libera para a criação de outra thread de foguete
+
+            if not(globals.mutex_polo_norte[planet.name.lower()].locked()): #Se o mutex do polo norte desse planeta não estiver trancado:
+                with globals.mutex_polo_norte[planet.name.lower()]: #mutex que protege o polo norte do planeta
+                    print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on North Pole")
+                    return
+            else: # se o polo norte já estiver sendo explodido:
+                with globals.mutex_polo_norte[planet.name.lower()]: #mutex que protege o polo sul do planeta
+                    print(f"[EXPLOSION] - The {self.name} ROCKET reached the planet {planet.name} on South Pole")
+                    return
+>>>>>>> origin/HEAD
     
     def voyage(self, planet): # Permitida a alteração (com ressalvas)
 
         # Essa chamada de código (do_we_have_a_problem e simulation_time_voyage) não pode ser retirada.
         # Você pode inserir código antes ou depois dela e deve
         # usar essa função.
+<<<<<<< HEAD
         self.simulation_time_voyage(planet)
         
         failure =  self.do_we_have_a_problem()
         if failure == True:
             print("Tristeza") #DELETAR NO FINAL
             #notificar o semaforo de foguetes (se isso for algo que exista. Acredito que vai existir)
+=======
+
+        if self.name == "LION": # o tempo de viagem da terra até a lua é insignificante então será ignorado
+            
+            failure =  self.do_we_have_a_problem()
+
+            if failure == True: #em caso de falha:
+                globals.semaforo_limite_foguetes_ativos.release() #libera um espaço para criação de outra thread foguete 
+                return #finaliza
+
+            else:
+                
+                with globals.mutex_armazenamento['MOON']: #Mutex que protege armazem da lua
+                    globals.get_bases_ref()['moon'].fuel += self.fuel_cargo #abastece a lua com combustível carregado pelo LION
+                    globals.get_bases_ref()['moon'].uranium += self.uranium_cargo #abastece a lua com urânio carregado pelo LION
+                    
+                    if globals.get_bases_ref()['moon'].fuel > globals.get_bases_ref()['moon'].constraints[1]: #se chegar mais material do que pode ser armazenado 
+                        globals.get_bases_ref()['moon'].fuel = globals.get_bases_ref()['moon'].constraints[1] # o resto é descartado
+
+                    if globals.get_bases_ref()['moon'].uranium > globals.get_bases_ref()['moon'].constraints[0]: #se chegar mais material do que pode ser armazenado
+                        globals.get_bases_ref()['moon'].uranium = globals.get_bases_ref()['moon'].constraints[0] # o resto é descartado
+                    globals.semaforo_limite_foguetes_ativos.release()   #libera um espaço para criação de outra thread foguete           
+                    return#finaliza
+     
+
+        self.simulation_time_voyage(planet)
+        failure =  self.do_we_have_a_problem()
+
+        if failure == True: #em caso de falha:
+            globals.semaforo_limite_foguetes_ativos.release() #libera um espaço para criação de outra thread foguete 
+         
+>>>>>>> origin/HEAD
         else:
             self.nuke(planet)
         
         
+<<<<<<< HEAD
         #na função voyage teremos que definir que se o foguete é do tipo LION a única viagem possível que ele pode fazer é para a Lua e ele não irá executar nuke()
+=======
+>>>>>>> origin/HEAD
 
 
     ####################################################
@@ -73,12 +127,20 @@ class Rocket:
     def successfull_launch(self, base): #Missão bem sucedida. Sinaliza para o envio de outro foguete
         if random() <= 0.1:
             print(f"[LAUNCH FAILED] - {self.name} ROCKET id:{self.id} on {base.name}")
+<<<<<<< HEAD
+=======
+            globals.semaforo_limite_foguetes_ativos.release() #Alteração necessária
+>>>>>>> origin/HEAD
             return False
         return True
     
     def damage(self):
+<<<<<<< HEAD
         return 20
         #return random()
+=======
+        return random()
+>>>>>>> origin/HEAD
 
     def launch(self, base, planet):
         if(self.successfull_launch(base)):
