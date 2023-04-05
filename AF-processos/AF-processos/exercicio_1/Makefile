@@ -1,10 +1,5 @@
 CFLAGS=-pthread -D_POSIX_C_SOURCE=200809L -g -O0
 # Só ativa sanitizers se não estivermos no cygwin nem num vgbuild
-ifneq ($(OS),Windows_NT)
-	ifneq ($(DISABLE_SANS),1)
-		CFLAGS +=  -fsanitize=address -fsanitize=undefined
-	endif
-endif
 LFLAGS=
 OUTPUT=program
 LIBS=-lm
