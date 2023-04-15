@@ -25,14 +25,13 @@
 
 
 int contador_global = 0;
-
-void* loop(void* arg){
-    for (int i = 0; i < *((int *)arg);i++){
+void* thread(void* arg){
+    int n =  *((int *)arg);
+    for (int i = 0; i< n; i++){
         contador_global++;
     }
-    return 0;
+    pthread_exit(NULL);
 }
-
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -44,15 +43,14 @@ int main(int argc, char* argv[]) {
     int n_threads = atoi(argv[1]);
     int n_loops = atoi(argv[2]);
     pthread_t threads[n_threads];
-
-    for(int i = 0; i < n_threads; i++){
-
-        pthread_create(&threads[i],NULL, loop, &n_loops);
+    
+    /* Cria n_threads threads informando como argumento de entrada um id único. */
+    for (int i = 0; i < n_threads; i++) {
+        pthread_create(&threads[i], NULL, thread, (void *)&n_loops);
     }
 
-    for (int i = 0; i < n_threads; ++i){
+    for (int i = 0; i < n_threads; ++i)
         pthread_join(threads[i], NULL);
-    }
     
     printf("Contador: %d\n", contador_global);
     printf("Esperado: %d\n", n_threads*n_loops);

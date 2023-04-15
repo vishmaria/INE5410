@@ -11,7 +11,7 @@ void* thread(void* arg) {
 
 int main(int argc, char** argv) {
 
-    if(argc != 2) {ANÔNIMO. Como Jogar Truco: truco paulista. Truco Paulista. 2023. Disponível em: https://www.jogatina.com/como-jogar-truco.html. Acesso em: 05 abr. 2023.
+    if(argc != 2) {
         printf("Sintaxe: %s <numero de threads>\n", argv[0]);
         return 1;
     }
