@@ -24,40 +24,67 @@ char cabeceiras[2][11] = { { "CONTINENTE" }, { "ILHA" } };
 int total_veiculos;
 int veiculos_turno;
 
+
 // ToDo: Adicione aque quaisquer outras variávels globais necessárias.
 /* ---------------------------------------- */
+sem_t entrada[2];
+// Será criado um samaforo binario para controlar contador_veiculos
+sem_t lock;
+int contador_veiculos = 0;
 
 
 /* Inicializa a ponte. */
 void ponte_inicializar() {
 	
 	// ToDo: IMPLEMENTAR!
+	sem_init(&entrada[ILHA], 0, veiculos_turno);
+	sem_init(&entrada[CONTINENTE], 0, 0);
+	sem_init(&lock, 0, 1);
 
 	/* Imprime direção inicial da travessia. NÃO REMOVER! */
 	printf("\n[PONTE] *** Novo sentido da travessia: CONTINENTE -> ILHA. ***\n\n");
 	fflush(stdout);
+
 }
 
 /* Função executada pelo veículo para ENTRAR em uma cabeceira da ponte. */
 void ponte_entrar(veiculo_t *v) {
-	
 	// ToDo: IMPLEMENTAR!
+	// se o sentido não foi invertido, i.e, entrando pela ilha
+	if (v -> cabeceira)
+		sem_wait(&entrada[ILHA]);
+	else
+		sem_wait(&entrada[CONTINENTE]);
 }
 
 /* Função executada pelo veículo para SAIR de uma cabeceira da ponte. */
 void ponte_sair(veiculo_t *v) {
 
+	// se todos os veiculos_turno sairam inverte a travessia
 	// ToDo: IMPLEMENTAR!
-	/* Você deverá imprimir a nova direção da travessia quando for necessário! */	
-	printf("\n[PONTE] *** Novo sentido da travessia: %s -> %s. ***\n\n", cabeceiras[v->cabeceira], cabeceiras[!v->cabeceira]);
-	fflush(stdout);
+	/* Você deverá imprimir a nova direção da travessia quando for necessário! */
+	sem_wait(&lock);
+	contador_veiculos++;
+	if (contador_veiculos == veiculos_turno){
+		contador_veiculos = 0;
+		printf("\n[PONTE] *** Novo sentido da travessia: %s -> %s. ***\n\n", cabeceiras[v->cabeceira], cabeceiras[!v->cabeceira]);
+		fflush(stdout);
+		for (int i = 0; i< veiculos_turno; i++)
+			if (v-> cabeceira)
+				sem_post(&entrada[ILHA]);
+			else	
+				sem_post(&entrada[CONTINENTE]);
+	}
+	sem_post(&lock);
 }
 
 /* FINALIZA a ponte. */
 void ponte_finalizar() {
 
 	// ToDo: IMPLEMENTAR!
-	
+	sem_destroy(&entrada[ILHA]);
+	sem_destroy(&entrada[CONTINENTE]);
+	sem_destroy(&lock);	
 	/* Imprime fim da execução! */
 	printf("[PONTE] FIM!\n\n");
 	fflush(stdout);
@@ -109,8 +136,8 @@ int main(int argc, char **argv) {
 
 	/* Aloca os veículos. */
 	veiculo_t veiculos[total_veiculos];
-
-	ponte_inicializar(total_veiculos, veiculos_turno);
+	/* Nao deveria ter parametros */
+	ponte_inicializar();
 
 	/* Cria os veículos. */
 	for (int i = 0; i < total_veiculos; i++) {
