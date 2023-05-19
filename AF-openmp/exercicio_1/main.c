@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
     double *c = (double *) malloc (sizeof(double) * size);
     
     //Guarda ponto de início da computação
+     
     double start = omp_get_wtime();
     calcular(c, size, n_threads);
     double duration = omp_get_wtime()-start; //quanto tempo passou
