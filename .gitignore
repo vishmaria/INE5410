@@ -1,3 +1,5 @@
 *.o
+*.bin
+*/INE5410-Game-of-Life
 **/INE5410-Game-of-Life
 **/build
