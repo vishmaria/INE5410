@@ -5,16 +5,17 @@
 
 double standard_deviation(double* data, int size) {
     double avg = 0;
-    #pragma omp parallel for schedule(static)
+    /* Usamos  a cláusula reduction para copiar os valores 
+    locais de avg e sd para a variável externa à região paralela.*/
+    #pragma omp parallel for reduction(+:avg) schedule(static)
     for (int i = 0; i < size; ++i) 
-        #pragma omp critical
         avg += data[i];
     avg /= size;
 
     double sd = 0;
-    #pragma omg parallel for schedule(static)
+    /* Como temos iterações com mesma carga de trabalho, usa-se static como no ex. 1 */
+    #pragma omp parallel for reduction(+:sd) schedule(static)
     for (int i = 0; i < size; ++i) 
-        #pragma omp critical
         sd += pow(data[i] - avg, 2);
     sd = sqrt(sd / (size-1));
 
