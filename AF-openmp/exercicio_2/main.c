@@ -10,15 +10,13 @@ void init_matrix(double* m, int rows, int columns) {
             m[i*columns+j] = i + j;
 }
 
-
+/* Só estava sendo calculada a primeira linha e a primeira coluna */
 void mult_matrix(double* out, double* left, double *right, 
                  int rows_left, int cols_left, int cols_right) {
-    int i, j, k;
-    #pragma omp parallel for schedule(static, rows_left)
+    int i = 0, j = 0, k =0;
+    #pragma omp parallel for schedule(guided) collapse(3) reduction(+:out[:rows_left * rows_left])
     for (i = 0; i < rows_left; ++i) {
         for (j = 0; j < cols_right; ++j) {
-            out[i*cols_right+j] = 0;
-            #pragma omp parallel for firstprivate(i, j) schedule(static, cols_right)
             for (k = 0; k < cols_left; ++k) 
                 out[i*cols_right+j] += left[i*cols_left+k]*right[k*cols_right+j];
         }

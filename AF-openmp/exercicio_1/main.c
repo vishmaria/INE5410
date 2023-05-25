@@ -4,14 +4,13 @@
 #include <omp.h>
 
 void calcular(double* c, int size, int n_threads) {
-        omp_set_num_threads(n_threads);
-        #pragma omp parallel for schedule(static)
-        for (long long int i = 0; i < size; i++) {
-           
-            c[i] = sqrt(i * 32) + sqrt(i * 16 + i * 8) + sqrt(i * 4 + i * 2 + i);
-            c[i] -= sqrt(i * 32 * i * 16 + i * 4 + i * 2 + i);
-            c[i] += pow(i * 32, 8) + pow(i * 16, 12);
-        }
+   /*Como as iterações possuem as mesma carga de trabalho, usa-se static*/
+    #pragma omp parallel for schedule(static)
+    for (long long int i = 0; i < size; i++) {
+        c[i] = sqrt(i * 32) + sqrt(i * 16 + i * 8) + sqrt(i * 4 + i * 2 + i);
+        c[i] -= sqrt(i * 32 * i * 16 + i * 4 + i * 2 + i);
+        c[i] += pow(i * 32, 8) + pow(i * 16, 12);
+    }
 }
 
 
@@ -25,6 +24,8 @@ int main(int argc, char** argv) {
 
     double *c = (double *) malloc (sizeof(double) * size);
     
+    omp_set_num_threads(n_threads);
+
     //Guarda ponto de início da computação
     double start = omp_get_wtime();
     calcular(c, size, n_threads);
