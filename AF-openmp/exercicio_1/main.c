@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
     omp_set_num_threads(n_threads);
 
     //Guarda ponto de início da computação
+     
     double start = omp_get_wtime();
     calcular(c, size, n_threads);
     double duration = omp_get_wtime()-start; //quanto tempo passou

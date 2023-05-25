@@ -4,34 +4,36 @@
 #include <stdlib.h>
 #include <assert.h>
 
-int gValue = 0;
-pthread_mutex_t gMtx;
-pthread_mutexattr_t attrs;
+//int gValue = 0;
+// pthread_mutex_t gMtx;
+// pthread_mutexattr_t attrs;
 
 // Função imprime resultados na correção do exercício -- definida em helper.c
 void imprimir_resultados(int n, int** results);
 
 // Função escrita por um engenheiro
-void compute(int arg) {
-    if (arg < 2) {
-        pthread_mutex_lock(&gMtx);
-        gValue += arg;
-        pthread_mutex_unlock(&gMtx);
+// Soluçao: compute() retorna o enesimo elemento da sequencia de Fibonacci.
+// Existem varios exemplos para implementa-la, este usa variaveis privadas 
+// à funçao e um retorno, eliminando a necessidade de mutex.
+// gValue também não será necessaria?
+int compute(int arg) {
+    if (arg < 2){
+        return arg;
     } else {
-        compute(arg - 1);
-        compute(arg - 2);
+        // Fn = Fn-1 + Fn-2
+        return (compute(arg-1)+ compute(arg-2));
     }
 }
 
 // Função wrapper que pode ser usada com pthread_create() para criar uma 
 // thread que retorna o resultado de compute(arg
 void* compute_thread(void* arg) {
+    int value  = 0;
+    value = compute(*((int*)arg));
     int* ret = malloc(sizeof(int));
-    pthread_mutex_lock(&gMtx);
-    gValue = 0;
-    compute(*((int*)arg));
-    *ret = gValue;
-    pthread_mutex_unlock(&gMtx);
+    // pthread_mutex_lock(&gMtx); 
+    *ret = value;
+    // pthread_mutex_unlock(&gMtx);
     return ret;
 }
 
@@ -50,9 +52,9 @@ int main(int argc, char** argv) {
     }
 
     //Inicializa o mutex
-    pthread_mutexattr_init(&attrs);
-    pthread_mutexattr_settype(&attrs, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&gMtx, &attrs);
+    // pthread_mutexattr_init(&attrs);
+    // pthread_mutexattr_settype(&attrs, PTHREAD_MUTEX_RECURSIVE);
+    // pthread_mutex_init(&gMtx, &attrs);
 
     int args[n_threads];
     int* results[n_threads];
@@ -67,8 +69,8 @@ int main(int argc, char** argv) {
         pthread_join(threads[i], (void**)&results[i]);
 
     // Não usaremos mais o mutex
-    pthread_mutexattr_destroy(&attrs);
-    pthread_mutex_destroy(&gMtx);
+    // pthread_mutexattr_destroy(&attrs);
+    // pthread_mutex_destroy(&gMtx);
 
     // Imprime resultados na tela
     // Importante: deve ser chamada para que a correção funcione
