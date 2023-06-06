@@ -1,6 +1,7 @@
 from time import sleep
 from random import randint
 from threading import Thread, Lock, Condition
+from concurrent.futures import ThreadPoolExecutor
 
 def produtor():
   global buffer
@@ -20,7 +21,7 @@ def consumidor():
   global buffer
   for i in range(10):
     with lock:
-      if buffer.empty():
+      if len(buffer) ==0:
         print('>>> Buffer vazio. Consumidor ira aguardar.')
         item_no_buffer.wait()   # aguarda que haja um item para consumir 
       item = buffer.pop(0)
